@@ -3,7 +3,6 @@ defmodule JobProcessor.JobTest do
 
   alias JobProcessor.Job
   alias JobProcessor.Task, as: JobTask
-  alias JobProcessor.TopSort
 
   setup_all do
     job = %Job{
@@ -71,8 +70,8 @@ defmodule JobProcessor.JobTest do
     {:ok, job: job, map: map}
   end
 
-  test "order_tasks() top sort no errors", state do
-    job = state[:job]
+  test "order_tasks() top sort no errors", context do
+    job = context[:job]
 
     [task1, task2, task3, task4] = job.tasks
     IO.puts("#{inspect(job, pretty: true)}")
@@ -80,8 +79,8 @@ defmodule JobProcessor.JobTest do
     assert %{job | tasks: [task1, task3, task2, task4], top_sorted: true} == result
   end
 
-  test "order_tasks() circular dependency", state do
-    job = state[:job]
+  test "order_tasks() circular dependency", context do
+    job = context[:job]
 
     circ_dep_job =
       put_in(job, [Access.key(:tasks), Access.at(0), Access.key(:requires)], ["task-3"])
@@ -89,8 +88,8 @@ defmodule JobProcessor.JobTest do
     assert {:error, msg} = Job.order_tasks(circ_dep_job)
   end
 
-  test "order_tasks() already sorted job", state do
-    job = state[:job]
+  test "order_tasks() already sorted job", context do
+    job = context[:job]
 
     [task1, task2, task3, task4] = job.tasks
     sorted_job = %{job | tasks: [task1, task3, task2, task4], top_sorted: true}
@@ -102,20 +101,20 @@ defmodule JobProcessor.JobTest do
     assert {:error, msg} = Job.order_tasks(%{})
   end
 
-  test "from_map() no errors", state do
-    job = state[:job]
-    map = state[:map]
+  test "from_map() no errors", context do
+    job = context[:job]
+    map = context[:map]
 
     {:ok, result} = Job.from_map(map)
     assert job == result
   end
 
-  test "from_map() invalid argument", state do
+  test "from_map() invalid argument" do
     assert {:error, msg} = Job.from_map([])
   end
 
-  test "to_bash_commands() valid data", state do
-    job = state[:job]
+  test "to_bash_commands() valid data", context do
+    job = context[:job]
 
     bash_commands =
       "touch /tmp/file1 && cat /tmp/file1 && echo 'Hello World!' > /tmp/file1 && rm /tmp/file1"
@@ -124,12 +123,12 @@ defmodule JobProcessor.JobTest do
     assert bash_commands == result
   end
 
-  test "to_bash_commands() invalid argument", state do
+  test "to_bash_commands() invalid argument" do
     assert {:error, msg} = Job.to_bash_commands([])
   end
 
-  test "to_list() valid data", state do
-    job = state[:job]
+  test "to_list() valid data", context do
+    job = context[:job]
 
     task_list = [
       %{
@@ -154,7 +153,7 @@ defmodule JobProcessor.JobTest do
     assert task_list == result
   end
 
-  test "to_list() map invalid argument", state do
+  test "to_list() map invalid argument" do
     assert {:error, msg} = Job.to_list([])
   end
 end

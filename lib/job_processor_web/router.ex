@@ -13,7 +13,6 @@ defmodule JobProcessorWeb.Router do
   scope "/api/actions", JobProcessorWeb do
     pipe_through :api
 
-    get "/list_jobs", JobController, :list_jobs
     post "/process_job_json", JobController, :process_job_json
     post "/process_job_bash", JobController, :process_job_bash
   end

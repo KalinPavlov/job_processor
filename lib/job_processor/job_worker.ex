@@ -12,25 +12,20 @@ defmodule JobProcessor.JobWorker do
   end
 
   @impl true
-  def handle_call({:process_job, return_type, %{"tasks" => _tasks} = job}, _from, jobs) do
+  def handle_call({:process_job, return_type, %{"tasks" => _tasks} = job}, _from, state) do
     with {:ok, job_struct} <- Job.from_map(job),
          {:ok, sorted_job} <- Job.order_tasks(job_struct) do
       {:ok, result} =
         case return_type do
           :json -> Job.to_list(sorted_job)
-          :text -> Job.to_bash_commands(sorted_job)
+          :bash -> Job.to_bash_commands(sorted_job)
         end
 
-      {:reply, result, [sorted_job | jobs]}
+      {:reply, result, state}
     else
       err ->
-        {:reply, err, jobs}
+        {:reply, err, state}
     end
-  end
-
-  @impl true
-  def handle_call({:list_jobs}, _from, jobs) do
-    {:reply, jobs, jobs}
   end
 
   @impl true
@@ -53,20 +48,12 @@ defmodule JobProcessor.JobWorker do
 
   Returns `{:ok, tasks}` if the tasks are processed correctly otherwise returns '{:error, msg}'.
   """
-  @spec process_job(map, atom()) :: {:ok, list()} | {:error, String.t()}
-  def process_job(%{"tasks" => _tasks} = job, return_type) when return_type in [:json, :text] do
+  @spec process_job(map, atom()) :: list()
+  def process_job(%{"tasks" => _tasks} = job, return_type) when return_type in [:json, :bash] do
     GenServer.call(:job_worker, {:process_job, return_type, job})
   end
 
   def process_job(job, return_type) do
     {:error, "Invalid arguments: #{inspect({job, return_type}, pretty: true)}"}
-  end
-
-  @doc """
-  Returns list of available jobs.
-  """
-  @spec list_jobs() :: list()
-  def list_jobs() do
-    GenServer.call(:job_worker, {:list_jobs})
   end
 end
