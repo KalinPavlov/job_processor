@@ -4,28 +4,12 @@ defmodule JobProcessor.Job do
   """
 
   alias JobProcessor.Task, as: JobTask
-  alias JobProcessor.TopSort
 
   use TypedStruct
 
   typedstruct do
     field(:tasks, list(JobTask.t()), default: [])
     field(:top_sorted, boolean, default: false)
-  end
-
-  @doc """
-  Runs the top sort algorithm and sets the :top_sorted field to true
-  """
-  @spec order_tasks(__MODULE__.t()) :: {:ok, __MODULE__.t()} | {:error, String.t()}
-  def order_tasks(%__MODULE__{} = job) do
-    case TopSort.sort(job.tasks) do
-      {:ok, tasks} -> {:ok, %{job | tasks: tasks, top_sorted: true}}
-      err -> err
-    end
-  end
-
-  def order_tasks(param) do
-    {:error, "Invalid argument: #{inspect(param, pretty: true)}"}
   end
 
   @doc """
@@ -44,7 +28,7 @@ defmodule JobProcessor.Job do
       end)
 
     case mapped_tasks do
-      {:ok, tasks} -> {:ok, struct(__MODULE__, %{tasks: tasks})}
+      {:ok, tasks} -> {:ok, struct(__MODULE__, %{tasks: Enum.reverse(tasks)})}
       {:error, msg} -> {:error, msg}
     end
   end
@@ -72,47 +56,41 @@ defmodule JobProcessor.Job do
 
   def to_list(param), do: {:error, "Invalid argument: #{inspect(param, pretty: true)}"}
 
-  def test_data do
-    %{
-      tasks: [
-        %{
-          name: "task-1",
-          command: "touch /tmp/file1"
-        },
-        %{
-          name: "task-2",
-          command: "cat /tmp/file1",
-          requires: [
-            "task-3"
-          ]
-        },
-        %{
-          name: "task-3",
-          command: "echo 'Hello World!' > /tmp/file1",
-          requires: [
-            "task-1"
-          ]
-        },
-        %{
-          name: "task-4",
-          command: "rm /tmp/file1",
-          requires: [
-            "task-2",
-            "task-3"
-          ]
-        }
-      ]
-    }
+  @doc """
+  Runs the top sort algorithm and sets the :top_sorted field to true.
+  """
+  @spec order_tasks(__MODULE__.t()) :: {:ok, __MODULE__.t()} | {:error, String.t()}
+  def order_tasks(%__MODULE__{tasks: tasks, top_sorted: false} = job) do
+    g = :digraph.new()
+
+    Enum.each(tasks, fn %JobTask{requires: deps} = l ->
+      :digraph.add_vertex(g, l)
+
+      deps
+      |> Enum.map(fn d -> Enum.find(tasks, fn %JobTask{name: name} -> name == d end) end)
+      |> Enum.each(fn d -> add_dependency(g, l, d) end)
+    end)
+
+    case :digraph_utils.topsort(g) do
+      false -> {:error, "Unsortable contains circular dependencies:"}
+      sorted_tasks -> {:ok, %{job | tasks: sorted_tasks, top_sorted: true}}
+    end
   end
 
-  def test_data1 do
-    %{
-      "name" => "task-4",
-      "command" => "rm /tmp/file1",
-      "requires" => [
-        "task-2",
-        "task-3"
-      ]
-    }
+  def order_tasks(%__MODULE__{top_sorted: true} = job) do
+    {:ok, job}
+  end
+
+  def order_tasks(param) do
+    {:error, "Invalid argument: #{inspect(param, pretty: true)}"}
+  end
+
+  defp add_dependency(_g, l, l), do: :ok
+
+  defp add_dependency(g, l, d) do
+    # noop if dependency already added
+    :digraph.add_vertex(g, d)
+    # Dependencies represented as an edge d -> l
+    :digraph.add_edge(g, d, l)
   end
 end

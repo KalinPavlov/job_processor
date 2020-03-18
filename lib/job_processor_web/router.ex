@@ -5,8 +5,8 @@ defmodule JobProcessorWeb.Router do
     plug :accepts, ["json"]
 
     plug Plug.Parsers,
-      parsers: [:urlencoded, :json],
-      pass: ["test/*"],
+      parsers: [:json],
+      pass: ["text/*", "application/x-www-form-urlencoded"],
       json_decoder: Jason
   end
 

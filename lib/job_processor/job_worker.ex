@@ -3,7 +3,6 @@ defmodule JobProcessor.JobWorker do
   use GenServer
 
   alias JobProcessor.Job
-  alias JobProcessor.TopSort
 
   ## Server code
 
@@ -15,7 +14,7 @@ defmodule JobProcessor.JobWorker do
   @impl true
   def handle_call({:process_job, return_type, %{"tasks" => _tasks} = job}, _from, jobs) do
     with {:ok, job_struct} <- Job.from_map(job),
-         {:ok, sorted_job} <- TopSort.sort(job_struct) do
+         {:ok, sorted_job} <- Job.order_tasks(job_struct) do
       {:ok, result} =
         case return_type do
           :json -> Job.to_list(sorted_job)
