@@ -3,9 +3,18 @@ defmodule JobProcessorWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+
+    plug Plug.Parsers,
+      parsers: [:urlencoded, :json],
+      pass: ["test/*"],
+      json_decoder: Jason
   end
 
-  scope "/api", JobProcessorWeb do
+  scope "/api/actions", JobProcessorWeb do
     pipe_through :api
+
+    get "/list_jobs", JobController, :list_jobs
+    post "/process_job_json", JobController, :process_job_json
+    post "/process_job_bash", JobController, :process_job_bash
   end
 end

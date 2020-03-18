@@ -6,10 +6,12 @@ defmodule JobProcessor.Application do
   use Application
 
   def start(_type, _args) do
+    import Supervisor.Spec, warn: false
     # List all child processes to be supervised
     children = [
       # Start the endpoint when the application starts
-      JobProcessorWeb.Endpoint
+      JobProcessorWeb.Endpoint,
+      worker(JobProcessor.JobWorker, [[name: :job_worker]])
       # Starts a worker by calling: JobProcessor.Worker.start_link(arg)
       # {JobProcessor.Worker, arg},
     ]
