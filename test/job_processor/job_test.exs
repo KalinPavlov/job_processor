@@ -74,7 +74,7 @@ defmodule JobProcessor.JobTest do
     job = context[:job]
 
     [task1, task2, task3, task4] = job.tasks
-    IO.puts("#{inspect(job, pretty: true)}")
+
     {:ok, result} = Job.order_tasks(job)
     assert %{job | tasks: [task1, task3, task2, task4], top_sorted: true} == result
   end

@@ -8,6 +8,7 @@ defmodule JobProcessor.JobWorker do
 
   @impl true
   def init(:ok) do
+    Logger.info("Starting JobWorker...")
     {:ok, []}
   end
 
@@ -30,7 +31,7 @@ defmodule JobProcessor.JobWorker do
 
   @impl true
   def handle_call(msg, _from, jobs) do
-    Logger.info("No handler available for: #{inspect(msg, pretty: true)}")
+    Logger.warn("No handler available for: #{inspect(msg, pretty: true)}")
     {:noreply, jobs}
   end
 
@@ -46,10 +47,11 @@ defmodule JobProcessor.JobWorker do
   @doc """
   Processes the job tasks and orders them topologically.
 
-  Returns `{:ok, tasks}` if the tasks are processed correctly otherwise returns '{:error, msg}'.
+  Returns `tasks` if the tasks are processed correctly otherwise returns '{:error, msg}'.
   """
-  @spec process_job(map, atom()) :: list()
+  @spec process_job(map, atom()) :: list() | {:error, String.t()}
   def process_job(%{"tasks" => _tasks} = job, return_type) when return_type in [:json, :bash] do
+    Logger.debug("Processing job: #{inspect({job, return_type}, pretty: true)}")
     GenServer.call(:job_worker, {:process_job, return_type, job})
   end
 
