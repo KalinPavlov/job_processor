@@ -30,9 +30,15 @@ defmodule JobProcessor.JobWorker do
   end
 
   @impl true
-  def handle_call(msg, _from, jobs) do
+  def handle_call(msg, _from, state) do
+    msg = "No handler available for: #{inspect(msg, pretty: true)}"
+    {:reply, {:error, msg}, state}
+  end
+
+  @impl true
+  def handle_cast(msg, state) do
     Logger.warn("No handler available for: #{inspect(msg, pretty: true)}")
-    {:noreply, jobs}
+    {:noreply, state}
   end
 
   ## Client Code
