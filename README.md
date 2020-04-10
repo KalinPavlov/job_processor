@@ -21,7 +21,7 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
    - lib
      - job_processor
         - job.ex
-        - job_worker.ex
+        - job_processor.ex
         - task.ex
      - job_processor_web
         - controllers
@@ -30,14 +30,14 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
    - test
      - job_processor
         - job_test.exs
-        - job_worker_test.exs
+        - job_processor_test.exs
         - task_test.exs
      - job_processor_web
         - controllers
             - job_controller_test.exs
             
 1. lib/job_processor - contains the modules representing the business logic
-2. li/job_processor_web - contains the router for specifying the endpoinds and the controller for sending the request 
+2. li/job_processor_web - contains the router for specifying the endpoints and the controller for sending the request 
 data to the business layer and returning the result
 3. test/job_processor - contains the test modules for the Job and Task structs and the process tests.
 4. test/job_processor_web/controllers - contains the API tests of the controller

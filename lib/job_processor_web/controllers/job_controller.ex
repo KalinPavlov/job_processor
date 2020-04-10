@@ -1,19 +1,18 @@
 defmodule JobProcessorWeb.JobController do
   use JobProcessorWeb, :controller
 
-  alias JobProcessor.JobWorker
-
   def process_job_json(conn, _params) do
-    case JobWorker.process_job(conn.params, :json) do
-      {:error, msg} -> json(conn, msg)
-      res -> json(conn, res)
-    end
+    res = JobProcessor.process_job(conn.params, :json)
+    render(conn, "job.json", res: res)
   end
 
   def process_job_bash(conn, _params) do
-    case JobWorker.process_job(conn.params, :bash) do
-      {:error, msg} -> text(conn, msg)
-      res -> text(conn, res)
+    case JobProcessor.process_job(conn.params, :bash) do
+      {:ok, res} ->
+        text(conn, res)
+
+      {:error, msg} ->
+        text(conn, msg)
     end
   end
 end

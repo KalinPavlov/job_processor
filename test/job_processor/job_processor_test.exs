@@ -1,11 +1,7 @@
 defmodule JobProcessor.JobWorkerTest do
   use ExUnit.Case, async: true
 
-  alias JobProcessor.JobWorker
-
   setup_all do
-    start_supervised!({JobWorker, [[name: :job_worker]]})
-
     map = %{
       "tasks" => [
         %{
@@ -62,7 +58,7 @@ defmodule JobProcessor.JobWorkerTest do
       }
     ]
 
-    assert expected == JobWorker.process_job(map, :json)
+    assert {:ok, expected} == JobProcessor.process_job(map, :json)
   end
 
   test "process_job() bash", context do
@@ -71,16 +67,16 @@ defmodule JobProcessor.JobWorkerTest do
     expected =
       "touch /tmp/file1 && echo 'Hello World!' > /tmp/file1 && cat /tmp/file1 && rm /tmp/file1"
 
-    assert expected == JobWorker.process_job(map, :bash)
+    assert {:ok, expected} == JobProcessor.process_job(map, :bash)
   end
 
   test "process_job() different type", context do
     map = context[:map]
 
-    assert {:error, msg} = JobWorker.process_job(map, :something)
+    assert {:error, msg} = JobProcessor.process_job(map, :something)
   end
 
   test "process_job() invalid input data" do
-    assert {:error, msg} = JobWorker.process_job(1, :json)
+    assert {:error, msg} = JobProcessor.process_job(1, :json)
   end
 end

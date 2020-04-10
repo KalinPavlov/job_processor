@@ -99,7 +99,7 @@ defmodule JobProcessorWeb.JobControllerTest do
   end
 
   test "POST /api/actions/process_job_json circular dependency", %{conn: conn, json: json} do
-    expected = "Unsortable contains circular dependencies:"
+    expected = "Unsortable contains circular dependencies!"
 
     req_json =
       put_in(json, [Access.key("tasks"), Access.at(0), Access.key("requires")], ["task-3"])

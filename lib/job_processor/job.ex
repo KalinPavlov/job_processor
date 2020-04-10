@@ -72,7 +72,7 @@ defmodule JobProcessor.Job do
     end)
 
     case :digraph_utils.topsort(g) do
-      false -> {:error, "Unsortable contains circular dependencies:"}
+      false -> {:error, "Unsortable contains circular dependencies!"}
       sorted_tasks -> {:ok, %{job | tasks: sorted_tasks, top_sorted: true}}
     end
   end
